@@ -3,7 +3,14 @@ import sys
 import time
 import random
 import pygame
-# testing git
+
+BGCOLOR = (220,220,220)
+
+global jump
+jump = False
+duck = False
+animbool = False	
+
 class Object(pygame.sprite.Sprite):
     def __init__(self):
         pygame.sprite.Sprite.__init__(self)
@@ -11,15 +18,21 @@ class Object(pygame.sprite.Sprite):
         self.movey = 0
         self.frame = 0
         self.images = []
-        img = pygame.image.load(os.path.join(imageinput)).convert_alpha()
+        for i in range(0,3):
+            try:
+                img = pygame.image.load(os.path.join(imageinput+str(i)+'.png')).convert_alpha()
+                self.images.append(img)
+            except pygame.error as message:
+                continue
         #img.convert_alpha()
         #img.set_colorkey(ALPHA)
-        self.images.append(img)
+       
         #alpha = 128
         #self.image.fill((255, 255, 255, alpha), None, pygame.BLEND_RGBA_MULT)
         self.image = self.images[0]
-        self.image.set_colorkey((220,220,220))
+        self.image.set_colorkey(BGCOLOR)
         self.rect = self.image.get_rect()
+
     def control(self, x, y):
         self.movex += x
         self.movey += y 
@@ -29,15 +42,45 @@ class Object(pygame.sprite.Sprite):
     def update(self):
         self.rect.x = self.rect.x + self.movex
         self.rect.y = self.rect.y + self.movey
+    def duck(self):
+        #self.rect = self.image.get_rect(y=660, x=125)
+        duckimg = pygame.image.load(os.path.join('./dinosprites/dinoduck.png')).convert_alpha()
+        self.images.append(duckimg)
+        self.image = self.images[3]
+        self.image.set_colorkey(BGCOLOR)
+        global duck
+        duck = True
+        #self.rect = self.image.get_rect()
+    def unduck(self):
+        #self.rect = self.image.get_rect(y=625, x=125)
+        self.image = self.images[0]
+        self.image.set_colorkey(BGCOLOR)
+        global duck
+        duck = False
+        #self.rect = self.image.get_rect()
+    def animate(self):
+        global animbool
+        if animbool == True and jump == False and duck == False:
+            self.image = self.images[1]
+            animbool = False
+            return
+        elif animbool == False and jump == False and duck == False:
+            self.image = self.images[2]
+            animbool = True
+            return
+        if jump == True:
+            self.image = self.images[0]
+        if duck == True:
+            self.image = self.images[3]
     def jump(self, y):
         self.movey += y
-    def duck(self):
-        self.rect = self.image.get_rect(y=560, x=125)
-    def unduck(self):
-        self.rect = self.image.get_rect(y=525, x=125)
+        global jump
+        jump = True
+        player.animate()
 
 #ALPHA = (0, 255, 0)
 BLACK = (0, 0, 0)
+WHITE = (255, 255, 255)
 worldx = 1920
 worldy = 1080
 fps = 60 # this essentially decides how fast everything will be updating on the screen, need to test on a 60Hz screen as my screen with 144fps is a lot faster than it is with 60
@@ -47,31 +90,34 @@ main = True
 
 myfont = pygame.font.SysFont('Comic Sans MS', 64)
 world = pygame.display.set_mode([worldx, worldy])
-imageinput = './dinosprites/properdino.png'
+imageinput = './dinosprites/properdino'
 player = Object()
-player.rect.x = 125
-player.rect.y = 525
+player.rect.x = 175
+player.rect.y = 630
 player_list = pygame.sprite.Group()
 player_list.add(player)
 
-imageinput = './dinosprites/rsz_rsz_1googleenemy.png'
+imageinput = './dinosprites/rsz_rsz_1googleenemy'
 enemy = Object()
 enemy.rect.x = 1900
-enemy.rect.y = 525 + random.randint(-120, 20)
-enemy_list = pygame.sprite.Group()
+enemy.rect.y = 630 + random.randint(-120, 15)
+enemy_list = pygame.sprite.Group() 
 enemy_list.add(enemy)
 
-imageinput = './dinosprites/rsz_rsz_1googleenemy.png'
+imageinput = './dinosprites/rsz_rsz_1googleenemy'
 flyingenemy = Object()
 flyingenemy.rect.x = 1900
-flyingenemy.rect.y = 525 + random.randint(-120, 20)
+flyingenemy.rect.y = 630 + random.randint(-120, 15)
 enemy_list.add(flyingenemy)
 
-imageinput = './dinosprites/1stcactus.png'
+imageinput = './dinosprites/1stcactus'
 cactusenemy = Object()
 cactusenemy.rect.x = 1900
-cactusenemy.rect.y = 525
+cactusenemy.rect.y = 630
 enemy_list.add(cactusenemy)
+
+cloudimage = pygame.image.load('./dinosprites/cloud_v10.png')
+cloudrect = cloudimage.get_rect()
 
 textsurface = myfont.render('GAME OVER YOU LOSE', False, BLACK)
 
@@ -93,7 +139,22 @@ mainloop = True
 global collide
 collide = False
 
+
 starttime = time.time()
+
+'''
+def drawCloud(): 
+    for i in range(4):  
+        xsize = random.randint(40, 70)      
+        ysize = random.randint(40, 70)
+        size=random.randint(20,70)
+        xOffset=random.randint(-40,40)
+        yOffset=random.randint(-20,20)
+        #pygame.draw.ellipse(world, BLACK, (100+xOffset, 100+yOffset, size, size), 0) # screen, color, (position, size), width
+        pygame.draw.ellipse(world, BLACK, (1700, 250, 150, 60), 0)
+        pygame.draw.ellipse(world, BLACK, (1675, 270, 165, 60), 0)
+        #pygame.draw.ellipse(world, BGCOLOR, (1705, 255, 140, 70), 0)
+'''
 
 def message_display(text, size, xcenter, ycenter):
     largeText = pygame.font.Font('freesansbold.ttf', size)
@@ -106,6 +167,37 @@ def text_objects(text, font):
     textSurface = font.render(text, True, BLACK)
     return textSurface, textSurface.get_rect()
 
+global cloud1ypos
+global cloud2ypos
+cloud1ypos = 250+random.randint(-50,50)
+cloud2ypos = 250+random.randint(-50,50)
+global b
+b = 0
+global c
+c = 0
+def cloud(): 
+    global b
+    global c
+    global cloud1ypos
+    global cloud2ypos
+    endtime = time.time()
+    cloud1xpos = 2000-b 
+    world.blit(cloudimage, (cloud1xpos, cloud1ypos))
+    b += 3
+
+    cloud2xpos = 2500-c
+    if((endtime-starttime) > 5):
+        world.blit(cloudimage, (cloud2xpos, cloud2ypos))
+        c += 3
+    if cloud1xpos < -125:
+        b = 0
+        cloudypos = 250+random.randint(-50,50)
+    if cloud2xpos < -125:
+        c = 500
+        cloudypos = 250+random.randint(-50,50)
+
+global fpscounter
+fpscounter = 0
 def refresh():
     world.fill((220,220,220))
     player.update()
@@ -114,7 +206,13 @@ def refresh():
     cactusenemy.update()
     player_list.draw(world)
     enemy_list.draw(world)
-    pygame.draw.line(world, BLACK, [100,600], [1820,600], 3)
+    cloud()
+    pygame.draw.line(world, BLACK, [150,700], [1770,700], 3)
+    pygame.draw.rect(world, BGCOLOR, (0,0,150,1080), 0)
+    pygame.draw.rect(world, BGCOLOR, (1770,0,150,1080), 0)
+    global fpscounter
+    if((fpscounter % 8) == 0):
+        player.animate()
     endtime = time.time()
     if collide == False:
         global score
@@ -122,6 +220,8 @@ def refresh():
         #print 'score ' + str(score)
         message_display('Score ' + str(score), 48, 1700, 150)
     pygame.display.flip()
+    fpscounter += 1
+    #print fpscounter
     clock.tick(fps)
 
 def collisioncheck(sprite1, sprite2):
@@ -144,7 +244,7 @@ def collisioncheck(sprite1, sprite2):
 
 def reuseenemy():
     enemy.rect.x = 1900
-    enemy.rect.y = 525 + random.randint(-60, 20)
+    enemy.rect.y = 625 + random.randint(-60, 20)
     endtime = time.time()
     global enemyspeed
     attemptedspeed = (random.randint(-8, -1))-(int(endtime-starttime))/6
@@ -156,7 +256,7 @@ def reuseenemy():
 
 def reuseflyingenemy():
     flyingenemy.rect.x = 1900
-    flyingenemy.rect.y = 525 + random.randint(-60, 20)
+    flyingenemy.rect.y = 625 + random.randint(-60, 20)
     endtime = time.time()
     global flyingenemyspeed 
     attemptedspeed = random.randint(-8, -1)-(int(endtime-starttime))/6
@@ -169,7 +269,7 @@ def reuseflyingenemy():
 
 def reusecactus():
     cactusenemy.rect.x = 1900
-    cactusenemy.rect.y = 525
+    cactusenemy.rect.y = 625
     endtime = time.time()
     global cactusspeed
     attemptedspeed = (random.randint(-8, -1))-(int(endtime-starttime))/6
@@ -186,7 +286,9 @@ while mainloop == True:
 
             if event.key == pygame.K_DOWN:
                 print('down')
-                player.duck()   
+                player.duck()
+                player.rect.x = 175
+                player.rect.y = 655   
                 if collide == False:
                     collisioncheck(player, enemy)
                     collisioncheck(player, flyingenemy)
@@ -227,11 +329,13 @@ while mainloop == True:
                     collisioncheck(player, cactusenemy)
                     #clock.tick(fps)
                     a += 1
-                    #print 'in loop'
+                jump = False
 
         if event.type == pygame.KEYUP:
             if event.key == pygame.K_DOWN:
                 player.unduck()
+                player.rect.x = 175
+                player.rect.y = 630
                 if collide == False:
                     collisioncheck(player, enemy)
                     collisioncheck(player, flyingenemy)
@@ -276,10 +380,8 @@ while mainloop == True:
     if(cactusenemy.rect.x < 0):
         reusecactus()
 
-    #global flyingenemyspawned
     if(flyingenemyspawned == False):
         print 'random flying enemy spawned'
-        global flyingenemyspawned
         flyingenemyspawned = True
 
     elif((flyingenemy.rect.x < 0) and ((timediffint % 8) == 0)):
