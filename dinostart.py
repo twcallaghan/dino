@@ -10,6 +10,13 @@ global jump
 jump = False
 duck = False
 animbool = False	
+animboolbird1 = False
+animboolbird2 = False
+
+pygame.mixer.init()
+
+lives = 3
+global lives
 
 class Object(pygame.sprite.Sprite):
     def __init__(self):
@@ -58,7 +65,7 @@ class Object(pygame.sprite.Sprite):
         global duck
         duck = False
         #self.rect = self.image.get_rect()
-    def animate(self):
+    def animatedino(self):
         global animbool
         if animbool == True and jump == False and duck == False:
             self.image = self.images[1]
@@ -72,11 +79,35 @@ class Object(pygame.sprite.Sprite):
             self.image = self.images[0]
         if duck == True:
             self.image = self.images[3]
+    def animatebird1(self):
+        global animboolbird1
+        if animboolbird1 == True:
+            self.image = self.images[0]
+            animboolbird1 = False
+            return
+        elif animboolbird1 == False:
+            self.image = self.images[1]
+            animboolbird1 = True
+            return
+    def animatebird2(self):
+        global animboolbird2
+        if animboolbird2 == True:
+            self.image = self.images[0]
+            animboolbird2 = False
+            return
+        elif animboolbird2 == False:
+            self.image = self.images[1]
+            animboolbird2 = True
+            return
     def jump(self, y):
         self.movey += y
         global jump
         jump = True
-        player.animate()
+        player.animatedino()
+    def randomcactus(self):
+        cactusint = random.randint(0,2)
+        self.image = self.images[cactusint]
+        return
 
 #ALPHA = (0, 255, 0)
 BLACK = (0, 0, 0)
@@ -97,17 +128,17 @@ player.rect.y = 630
 player_list = pygame.sprite.Group()
 player_list.add(player)
 
-imageinput = './dinosprites/rsz_rsz_1googleenemy'
+imageinput = './dinosprites/bird'
 enemy = Object()
 enemy.rect.x = 1900
-enemy.rect.y = 630 + random.randint(-120, 15)
+enemy.rect.y = 630 + random.randint(-275, -150)
 enemy_list = pygame.sprite.Group() 
 enemy_list.add(enemy)
 
-imageinput = './dinosprites/rsz_rsz_1googleenemy'
+imageinput = './dinosprites/bird'
 flyingenemy = Object()
 flyingenemy.rect.x = 1900
-flyingenemy.rect.y = 630 + random.randint(-120, 15)
+flyingenemy.rect.y = 630 + random.randint(-275, -150)
 enemy_list.add(flyingenemy)
 
 imageinput = './dinosprites/1stcactus'
@@ -121,17 +152,16 @@ cloudrect = cloudimage.get_rect()
 
 textsurface = myfont.render('GAME OVER YOU LOSE', False, BLACK)
 
-global flyingenemyspawned
 flyingenemyspawned = False
 
 global enemyspeed
-enemyspeed = random.randint(-12, -7)
+enemyspeed = random.randint(-7, -5)
 
 global flyingenemyspeed 
-flyingenemyspeed = random.randint(-12, -7)
+flyingenemyspeed = random.randint(-7, -5)
 
 global cactusspeed
-cactusspeed = random.randint(-12, -9)
+cactusspeed = random.randint(-13, -10)
 
 global mainloop
 mainloop = True
@@ -212,39 +242,78 @@ def refresh():
     pygame.draw.rect(world, BGCOLOR, (1770,0,150,1080), 0)
     global fpscounter
     if((fpscounter % 8) == 0):
-        player.animate()
+        player.animatedino()
+    if((fpscounter % 15) == 0):
+        enemy.animatebird1()
+        flyingenemy.animatebird2()
     endtime = time.time()
     if collide == False:
         global score
         score = int((float("{0:.2f}".format(endtime-starttime))*10) * 1+float("{0:.2f}".format((endtime-starttime)/10)))
         #print 'score ' + str(score)
-        message_display('Score ' + str(score), 48, 1700, 150)
+        message_display('Score ' + str(score), 48, 1700, 50)
+        if(score > 10 and (score % 98) == 0):
+            pygame.mixer.music.load('./dinosprites/100soundeffect.mp3')
+            pygame.mixer.music.play(0)
+            clock.tick(18)
+    message_display('Lives: ' + str(lives), 48, 1690, 100)
+    global flyingenemyspawned
+    if(flyingenemyspawned == False and (endtime-starttime) > 150):
+        print 'random flying enemy spawned'
+        flyingenemyspawned = True
     pygame.display.flip()
     fpscounter += 1
+    global fpscounter
     #print fpscounter
     clock.tick(fps)
 
 def collisioncheck(sprite1, sprite2):
     collision = pygame.sprite.collide_rect(sprite1, sprite2)
     if collision == True:
-        global collide
-        collide = True
-        print "YOU LOSE!"
-        global mainloop
-        mainloop = False
-        world.fill((220,220,220))
-        enemy.stop()
-        flyingenemy.stop()
-        player.stop()   
-        pygame.display.flip()
-        refresh()
-        message_display('Game Over', 115, 960, 300)
-        message_display('Your Score: ' + str(score), 60, 960, 420)
-        time.sleep(5)
+        hit = False
+        hit2 = False
+        hit3 = False
+        global lives
+        if lives == 3: 
+            lives += -1 
+            #print lives
+            var1 = fpscounter
+            global var1
+            pygame.mixer.music.load('./dinosprites/Explosion2.wav')
+            pygame.mixer.music.play(0)
+        if lives == 2:
+            var2 = fpscounter
+            if var2-var1 > 30 and hit == False:
+                hit = True
+                lives += -1
+                var3 = fpscounter
+                global var3
+                pygame.mixer.music.load('./dinosprites/Explosion2.wav')
+                pygame.mixer.music.play(0)
+        if lives == 1:
+            var4 = fpscounter
+            if var4-var3> 30 and hit2 == False:
+                pygame.mixer.music.load('./dinosprites/Explosion2.wav')
+                pygame.mixer.music.play(0)
+                lives += -1
+                global collide
+                collide = True
+                print "YOU LOSE!"
+                global mainloop
+                mainloop = False
+                world.fill((220,220,220))
+                enemy.stop()
+                flyingenemy.stop()
+                player.stop()   
+                pygame.display.flip()
+                refresh()
+                message_display('Game Over', 115, 960, 300)
+                message_display('Your Score: ' + str(score), 60, 960, 420)
+                time.sleep(5)
 
 def reuseenemy():
     enemy.rect.x = 1900
-    enemy.rect.y = 625 + random.randint(-60, 20)
+    enemy.rect.y = 625 + random.randint(-275, -150)
     endtime = time.time()
     global enemyspeed
     attemptedspeed = (random.randint(-8, -1))-(int(endtime-starttime))/6
@@ -256,7 +325,7 @@ def reuseenemy():
 
 def reuseflyingenemy():
     flyingenemy.rect.x = 1900
-    flyingenemy.rect.y = 625 + random.randint(-60, 20)
+    flyingenemy.rect.y = 625 + random.randint(-275, -150)
     endtime = time.time()
     global flyingenemyspeed 
     attemptedspeed = random.randint(-8, -1)-(int(endtime-starttime))/6
@@ -268,11 +337,12 @@ def reuseflyingenemy():
 
 
 def reusecactus():
-    cactusenemy.rect.x = 1900
+    cactusenemy.randomcactus()
+    cactusenemy.rect.x = 2000
     cactusenemy.rect.y = 625
     endtime = time.time()
     global cactusspeed
-    attemptedspeed = (random.randint(-8, -1))-(int(endtime-starttime))/6
+    attemptedspeed = (random.randint(-8, -1))-(int(endtime-starttime))/3
     if int(attemptedspeed) > -5:
         cactusspeed = random.randint(-8, -6)
     else:
@@ -296,11 +366,13 @@ while mainloop == True:
 
             if event.key == pygame.K_UP:
                 print('up')
-                a = 1
-                while a < 23 and collide == False:
+                a = 23
+                #while a < 23 and collide == False:
+                while a > 0 and collide == False:
                     player.jump(-a)
                     enemy.control(enemyspeed, 0)
-                    flyingenemy.control(flyingenemyspeed, 0)
+                    if(flyingenemyspawned == True):
+                        flyingenemy.control(flyingenemyspeed, 0)
                     cactusenemy.control(cactusspeed, 0)
                     refresh()
                     player.stop()
@@ -311,13 +383,14 @@ while mainloop == True:
                     collisioncheck(player, flyingenemy)
                     collisioncheck(player, cactusenemy)
                     #clock.tick(fps)
-                    a += 1      
+                    a += -1      
 
                 a = 1
-                while a < 23 and collide == False:
+                while a <= 23 and collide == False:
                     player.jump(a)
                     enemy.control(enemyspeed, 0)
-                    flyingenemy.control(flyingenemyspeed, 0)
+                    if(flyingenemyspawned == True):
+                        flyingenemy.control(flyingenemyspeed, 0)
                     cactusenemy.control(cactusspeed, 0)
                     refresh()
                     player.stop()
@@ -379,10 +452,6 @@ while mainloop == True:
     
     if(cactusenemy.rect.x < 0):
         reusecactus()
-
-    if(flyingenemyspawned == False):
-        print 'random flying enemy spawned'
-        flyingenemyspawned = True
 
     elif((flyingenemy.rect.x < 0) and ((timediffint % 8) == 0)):
         print ' trying to spawn random flying enemy'
