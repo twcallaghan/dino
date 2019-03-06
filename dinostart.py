@@ -12,7 +12,7 @@ duck = False
 animbool = False	
 animboolbird1 = False
 animboolbird2 = False
-
+animboolduck = False
 pygame.mixer.init()
 
 lives = 3
@@ -25,7 +25,7 @@ class Object(pygame.sprite.Sprite):
         self.movey = 0
         self.frame = 0
         self.images = []
-        for i in range(0,3):
+        for i in range(0,6):
             try:
                 img = pygame.image.load(os.path.join(imageinput+str(i)+'.png')).convert_alpha()
                 self.images.append(img)
@@ -51,12 +51,23 @@ class Object(pygame.sprite.Sprite):
         self.rect.y = self.rect.y + self.movey
     def duck(self):
         #self.rect = self.image.get_rect(y=660, x=125)
-        duckimg = pygame.image.load(os.path.join('./dinosprites/dinoduck.png')).convert_alpha()
-        self.images.append(duckimg)
-        self.image = self.images[3]
-        self.image.set_colorkey(BGCOLOR)
+        #duckimg = pygame.image.load(os.path.join('./dinosprites/dinoduck.png')).convert_alpha()
+        #self.images.append(duckimg)
+        #self.image = self.images[3]
+        #self.image.set_colorkey(BGCOLOR)
         global duck
-        duck = True
+        #duck = True
+        global animboolduck
+        if animboolduck == True:
+            self.image = self.images[3]
+            animboolduck = False
+            print 'asdasd'
+            return
+        elif animboolduck == False:
+            self.image = self.images[4]
+            print 'thomas'
+            animboolduck = True
+            return
         #self.rect = self.image.get_rect()
     def unduck(self):
         #self.rect = self.image.get_rect(y=625, x=125)
@@ -66,7 +77,9 @@ class Object(pygame.sprite.Sprite):
         duck = False
         #self.rect = self.image.get_rect()
     def animatedino(self):
+        print 'apple'
         global animbool
+        global duck
         if animbool == True and jump == False and duck == False:
             self.image = self.images[1]
             animbool = False
@@ -241,7 +254,11 @@ def refresh():
     pygame.draw.rect(world, BGCOLOR, (0,0,150,1080), 0)
     pygame.draw.rect(world, BGCOLOR, (1770,0,150,1080), 0)
     global fpscounter
-    if((fpscounter % 8) == 0):
+    global duck
+    if duck == True and (fpscounter % 8) == 0:
+        print 'a'
+        player.duck()
+    if((fpscounter % 8) == 0) and duck == False:
         player.animatedino()
     if((fpscounter % 15) == 0):
         enemy.animatebird1()
@@ -316,7 +333,7 @@ def reuseenemy():
     enemy.rect.y = 625 + random.randint(-275, -150)
     endtime = time.time()
     global enemyspeed
-    attemptedspeed = (random.randint(-8, -1))-(int(endtime-starttime))/6
+    attemptedspeed = (random.randint(-8, -1))-(int(endtime-starttime))/4
     if int(attemptedspeed) > -5:
         enemyspeed = random.randint(-8, -5)
     else:
@@ -328,7 +345,7 @@ def reuseflyingenemy():
     flyingenemy.rect.y = 625 + random.randint(-275, -150)
     endtime = time.time()
     global flyingenemyspeed 
-    attemptedspeed = random.randint(-8, -1)-(int(endtime-starttime))/6
+    attemptedspeed = random.randint(-8, -1)-(int(endtime-starttime))/4
     if int(attemptedspeed) > -5:
         flyingenemyspeed = random.randint(-8, -5)
     else:
@@ -342,7 +359,7 @@ def reusecactus():
     cactusenemy.rect.y = 625
     endtime = time.time()
     global cactusspeed
-    attemptedspeed = (random.randint(-8, -1))-(int(endtime-starttime))/3
+    attemptedspeed = (random.randint(-8, -1))-(int(endtime-starttime))/4
     if int(attemptedspeed) > -5:
         cactusspeed = random.randint(-8, -6)
     else:
@@ -356,7 +373,10 @@ while mainloop == True:
 
             if event.key == pygame.K_DOWN:
                 print('down')
-                player.duck()
+                global duck 
+                duck = True
+                #player.duck()
+                refresh()
                 player.rect.x = 175
                 player.rect.y = 655   
                 if collide == False:
