@@ -61,11 +61,9 @@ class Object(pygame.sprite.Sprite):
         if animboolduck == True:
             self.image = self.images[3]
             animboolduck = False
-            print 'asdasd'
             return
         elif animboolduck == False:
             self.image = self.images[4]
-            print 'thomas'
             animboolduck = True
             return
         #self.rect = self.image.get_rect()
@@ -77,7 +75,6 @@ class Object(pygame.sprite.Sprite):
         duck = False
         #self.rect = self.image.get_rect()
     def animatedino(self):
-        print 'apple'
         global animbool
         global duck
         if animbool == True and jump == False and duck == False:
@@ -170,7 +167,7 @@ flyingenemyspawned = False
 global enemyspeed
 enemyspeed = random.randint(-7, -5)
 
-global flyingenemyspeed 
+global flyingenemyspeed
 flyingenemyspeed = random.randint(-7, -5)
 
 global cactusspeed
@@ -218,7 +215,9 @@ global b
 b = 0
 global c
 c = 0
-def cloud(): 
+
+
+def cloud():
     global b
     global c
     global cloud1ypos
@@ -241,6 +240,8 @@ def cloud():
 
 global fpscounter
 fpscounter = 0
+
+
 def refresh():
     world.fill((220,220,220))
     player.update()
@@ -255,27 +256,27 @@ def refresh():
     pygame.draw.rect(world, BGCOLOR, (1770,0,150,1080), 0)
     global fpscounter
     global duck
-    if duck == True and (fpscounter % 8) == 0:
-        print 'a'
+    if duck is True and (fpscounter % 8) == 0:
         player.duck()
     if((fpscounter % 8) == 0) and duck == False:
         player.animatedino()
-    if((fpscounter % 15) == 0):
+    if(fpscounter % 15) == 0:
         enemy.animatebird1()
         flyingenemy.animatebird2()
     endtime = time.time()
-    if collide == False:
+    if collide is False:
         global score
         score = int((float("{0:.2f}".format(endtime-starttime))*10) * 1+float("{0:.2f}".format((endtime-starttime)/10)))
         #print 'score ' + str(score)
         message_display('Score ' + str(score), 48, 1700, 50)
-        if(score > 10 and (score % 98) == 0):
-            pygame.mixer.music.load('./dinosprites/100soundeffect.mp3')
-            pygame.mixer.music.play(0)
-            clock.tick(18)
+        if score > 10 and (score % 98) == 0:
+            #pygame.mixer.music.load('./dinosprites/100soundeffect.mp3')
+            #pygame.mixer.music.play(0)
+            #clock.tick(18)
+            pass # the sound kept crashing my game
     message_display('Lives: ' + str(lives), 48, 1690, 100)
     global flyingenemyspawned
-    if(flyingenemyspawned == False and (endtime-starttime) > 150):
+    if flyingenemyspawned is False and endtime-starttime > 150:
         print 'random flying enemy spawned'
         flyingenemyspawned = True
     pygame.display.flip()
@@ -289,7 +290,6 @@ def collisioncheck(sprite1, sprite2):
     if collision == True:
         hit = False
         hit2 = False
-        hit3 = False
         global lives
         if lives == 3: 
             lives += -1 
@@ -309,7 +309,7 @@ def collisioncheck(sprite1, sprite2):
                 pygame.mixer.music.play(0)
         if lives == 1:
             var4 = fpscounter
-            if var4-var3> 30 and hit2 == False:
+            if var4-var3 > 30 and hit2 == False:
                 pygame.mixer.music.load('./dinosprites/Explosion2.wav')
                 pygame.mixer.music.play(0)
                 lives += -1
@@ -366,86 +366,95 @@ def reusecactus():
         cactusspeed = attemptedspeed
     print str(cactusspeed) + ' cactus speed speed on respawn'
 
+starteventtime = 0
+endeventtime = 0
 while mainloop == True:
     for event in pygame.event.get():
-        if event.type == pygame.KEYDOWN: #if a key is pressed
-            print('key pressed')
-
-            if event.key == pygame.K_DOWN:
-                print('down')
-                global duck 
-                duck = True
-                #player.duck()
-                refresh()
-                player.rect.x = 175
-                player.rect.y = 655   
-                if collide == False:
-                    collisioncheck(player, enemy)
-                    collisioncheck(player, flyingenemy)
-                    collisioncheck(player, cactusenemy)
-
-            if event.key == pygame.K_UP:
-                print('up')
-                a = 23
-                #while a < 23 and collide == False:
-                while a > 0 and collide == False:
-                    player.jump(-a)
-                    enemy.control(enemyspeed, 0)
-                    if(flyingenemyspawned == True):
-                        flyingenemy.control(flyingenemyspeed, 0)
-                    cactusenemy.control(cactusspeed, 0)
+        print (starteventtime-endeventtime)
+        starteventtime = time.time()
+        if starteventtime-endeventtime < 0.017: # this seems to work exactly how i want it to, you no longer can spam the keyboard and have it infinitely jump. Small enough delay that middle schoolers shouldn't notice.
+            starteventtime = 100
+            endeventtime = 0
+        else:
+            if event.type == pygame.KEYDOWN: #if a key is pressed
+                print('key pressed')
+                if event.key == pygame.K_DOWN:
+                    print('down')
+                    global duck 
+                    duck = True
+                    #player.duck()
                     refresh()
+                    player.rect.x = 175
+                    player.rect.y = 655   
+                    if collide == False:
+                        collisioncheck(player, enemy)
+                        collisioncheck(player, flyingenemy)
+                        collisioncheck(player, cactusenemy)
+
+                if event.key == pygame.K_UP:
+                    print('up')
+                    a = 23
+                    #while a < 23 and collide == False:
+                    while a > 0 and collide == False:
+                        player.jump(-a)
+                        enemy.control(enemyspeed, 0)
+                        if flyingenemyspawned == True:
+                            flyingenemy.control(flyingenemyspeed, 0)
+                        cactusenemy.control(cactusspeed, 0)
+                        refresh()
+                        player.stop()
+                        enemy.stop()
+                        flyingenemy.stop()
+                        cactusenemy.stop()
+                        collisioncheck(player, enemy)
+                        collisioncheck(player, flyingenemy)
+                        collisioncheck(player, cactusenemy)
+                        #clock.tick(fps)
+                        a += -1      
+
+                    a = 1
+                    while a <= 23 and collide == False:
+                        player.jump(a)
+                        enemy.control(enemyspeed, 0)
+                        if(flyingenemyspawned == True):
+                            flyingenemy.control(flyingenemyspeed, 0)
+                        cactusenemy.control(cactusspeed, 0)
+                        refresh()
+                        player.stop()
+                        enemy.stop()
+                        flyingenemy.stop()  
+                        cactusenemy.stop()
+                        collisioncheck(player, enemy)
+                        collisioncheck(player, flyingenemy)
+                        collisioncheck(player, cactusenemy)
+                        #clock.tick(fps)
+                        a += 1
+                    jump = False
+
+            if event.type == pygame.KEYUP:
+                if event.key == pygame.K_DOWN:
+                    player.unduck()
+                    player.rect.x = 175
+                    player.rect.y = 630
+                    if collide == False:
+                        collisioncheck(player, enemy)
+                        collisioncheck(player, flyingenemy)
+                        collisioncheck(player, cactusenemy)
+
+                if event.key == pygame.K_UP:
                     player.stop()
                     enemy.stop()
-                    flyingenemy.stop()
-                    cactusenemy.stop()
-                    collisioncheck(player, enemy)
-                    collisioncheck(player, flyingenemy)
-                    collisioncheck(player, cactusenemy)
-                    #clock.tick(fps)
-                    a += -1      
+                    endeventtime = time.time()
+                    global endeventtime
+                    if collide == False:
+                        collisioncheck(player, enemy)
+                        collisioncheck(player, flyingenemy)
+                        collisioncheck(player, cactusenemy)
 
-                a = 1
-                while a <= 23 and collide == False:
-                    player.jump(a)
-                    enemy.control(enemyspeed, 0)
-                    if(flyingenemyspawned == True):
-                        flyingenemy.control(flyingenemyspeed, 0)
-                    cactusenemy.control(cactusspeed, 0)
-                    refresh()
-                    player.stop()
-                    enemy.stop()
-                    flyingenemy.stop()  
-                    cactusenemy.stop()
-                    collisioncheck(player, enemy)
-                    collisioncheck(player, flyingenemy)
-                    collisioncheck(player, cactusenemy)
-                    #clock.tick(fps)
-                    a += 1
-                jump = False
-
-        if event.type == pygame.KEYUP:
-            if event.key == pygame.K_DOWN:
-                player.unduck()
-                player.rect.x = 175
-                player.rect.y = 630
-                if collide == False:
-                    collisioncheck(player, enemy)
-                    collisioncheck(player, flyingenemy)
-                    collisioncheck(player, cactusenemy)
-
-            if event.key == pygame.K_UP:
-                player.stop()
-                enemy.stop()
-                if collide == False:
-                    collisioncheck(player, enemy)
-                    collisioncheck(player, flyingenemy)
-                    collisioncheck(player, cactusenemy)
-
-            if event.key == ord('q'):
-                pygame.quit()
-                sys.exit()
-                main = False
+                if event.key == ord('q'):
+                    pygame.quit()
+                    sys.exit()
+                    main = False
 
     endtime = time.time()
     timediff = endtime-starttime
@@ -467,18 +476,18 @@ while mainloop == True:
         collisioncheck(player, flyingenemy)
         collisioncheck(player, cactusenemy)
 
-    if(enemy.rect.x < 0):
+    if enemy.rect.x < 0:
         reuseenemy()
     
-    if(cactusenemy.rect.x < 0):
+    if cactusenemy.rect.x < 0:
         reusecactus()
 
-    elif((flyingenemy.rect.x < 0) and ((timediffint % 8) == 0)):
+    elif(flyingenemy.rect.x < 0) and ((timediffint % 8) == 0):
         print ' trying to spawn random flying enemy'
         if(((random.randint(2,10)) % 2) == 0):
             print  ' random flying enemy REUSED '
             reuseflyingenemy()
-    
+
     #clock.tick(fps)
 
     '''
