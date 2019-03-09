@@ -6,14 +6,26 @@ import pygame
 
 BGCOLOR = (220,220,220)
 
-global jump
 jump = False
 duck = False
 animbool = False	
 animboolbird1 = False
 animboolbird2 = False
 animboolduck = False
+fpsCount = 0
+pygame.mixer.pre_init(22050, -16, 1, 256)
 pygame.mixer.init()
+pygame.init()
+
+fpscounter = 0
+
+
+
+fps = 60 # this essentially decides how fast everything will be updating on the screen, need to test on a 60Hz screen as my screen with 144fps is a lot faster than it is with 60
+
+# preload sound fx
+collisionSound = pygame.mixer.Sound('./dinosprites/Explosion2.wav')
+progressSound = pygame.mixer.Sound('./dinosprites/smw_message_block.wav')
 
 lives = 3
 global lives
@@ -28,6 +40,9 @@ class Object(pygame.sprite.Sprite):
         for i in range(0,6):
             try:
                 img = pygame.image.load(os.path.join(imageinput+str(i)+'.png')).convert_alpha()
+                # self.mask = pygame.mask.from_surface(self.image)
+                # if pygame.sprite.spritecollide(b1, b2, False, pygame.sprite.collide_mask):
+                #   print "sprites have collided!"
                 self.images.append(img)
             except pygame.error as message:
                 continue
@@ -124,13 +139,19 @@ BLACK = (0, 0, 0)
 WHITE = (255, 255, 255)
 worldx = 1920
 worldy = 1080
-fps = 60 # this essentially decides how fast everything will be updating on the screen, need to test on a 60Hz screen as my screen with 144fps is a lot faster than it is with 60
+screenBitDepth = 32
 clock=pygame.time.Clock()
-pygame.init()
 main = True
 
 myfont = pygame.font.SysFont('Comic Sans MS', 64)
-world = pygame.display.set_mode([worldx, worldy])
+gameFont050 = pygame.font.Font('freesansbold.ttf', 050)
+gameFont100 = pygame.font.Font('freesansbold.ttf', 100)
+gameFont150 = pygame.font.Font('freesansbold.ttf', 150)
+gameFont200 = pygame.font.Font('freesansbold.ttf', 200)
+
+world = pygame.display.set_mode([worldx, worldy],pygame.FULLSCREEN,screenBitDepth)
+pygame.mouse.set_visible(False)
+
 imageinput = './dinosprites/properdino'
 player = Object()
 player.rect.x = 175
@@ -159,8 +180,6 @@ enemy_list.add(cactusenemy)
 
 cloudimage = pygame.image.load('./dinosprites/cloud_v10.png')
 cloudrect = cloudimage.get_rect()
-
-textsurface = myfont.render('GAME OVER YOU LOSE', False, BLACK)
 
 flyingenemyspawned = False
 
@@ -196,12 +215,20 @@ def drawCloud():
         #pygame.draw.ellipse(world, BGCOLOR, (1705, 255, 140, 70), 0)
 '''
 
-def message_display(text, size, xcenter, ycenter):
-    largeText = pygame.font.Font('freesansbold.ttf', size)
-    TextSurf, TextRect = text_objects(text, largeText)
+def message_display(text, size, xcenter, ycenter, updateDisplay):
+    if (size==50):
+        TextSurf, TextRect = text_objects(text, gameFont050)
+    elif (size==100):
+        TextSurf, TextRect = text_objects(text, gameFont100)
+    elif (size==150):
+        TextSurf, TextRect = text_objects(text, gameFont150)
+    else:
+        TextSurf, TextRect = text_objects(text, gameFont200)
     TextRect.center = (xcenter, ycenter)
     world.blit(TextSurf, TextRect)
-    pygame.display.update(TextRect)
+    if (updateDisplay):
+        # need to update the live display - game over overlay
+        pygame.display.update(TextRect)
 
 def text_objects(text, font):
     textSurface = font.render(text, True, BLACK)
@@ -238,11 +265,11 @@ def cloud():
         c = 500
         cloudypos = 250+random.randint(-50,50)
 
-global fpscounter
-fpscounter = 0
-
-
 def refresh():
+    global fpscounter
+    global fpsCount
+    fpscounter += 1
+    fpsCount += 1
     world.fill((220,220,220))
     player.update()
     enemy.update()
@@ -254,8 +281,6 @@ def refresh():
     pygame.draw.line(world, BLACK, [150,700], [1770,700], 3)
     pygame.draw.rect(world, BGCOLOR, (0,0,150,1080), 0)
     pygame.draw.rect(world, BGCOLOR, (1770,0,150,1080), 0)
-    global fpscounter
-    global duck
     if duck is True and (fpscounter % 8) == 0:
         player.duck()
     if((fpscounter % 8) == 0) and duck == False:
@@ -264,25 +289,23 @@ def refresh():
         enemy.animatebird1()
         flyingenemy.animatebird2()
     endtime = time.time()
+    # display fps
+    if (endtime > starttime):
+        avgFps=int(fpsCount/(endtime-starttime))
+        message_display('avgFps ' + str(avgFps), 50, 1700, 150, False)
     if collide is False:
         global score
         score = int((float("{0:.2f}".format(endtime-starttime))*10) * 1+float("{0:.2f}".format((endtime-starttime)/10)))
         #print 'score ' + str(score)
-        message_display('Score ' + str(score), 48, 1700, 50)
+        message_display('Score ' + str(score), 50, 1700, 50, False)
         if score > 10 and (score % 98) == 0:
-            #pygame.mixer.music.load('./dinosprites/100soundeffect.mp3')
-            #pygame.mixer.music.play(0)
-            #clock.tick(18)
-            pass # the sound kept crashing my game
-    message_display('Lives: ' + str(lives), 48, 1690, 100)
+            progressSound.play()
+    message_display('Lives: ' + str(lives), 50, 1690, 100, False)
     global flyingenemyspawned
     if flyingenemyspawned is False and endtime-starttime > 150:
         print 'random flying enemy spawned'
         flyingenemyspawned = True
     pygame.display.flip()
-    fpscounter += 1
-    global fpscounter
-    #print fpscounter
     clock.tick(fps)
 
 def collisioncheck(sprite1, sprite2):
@@ -296,8 +319,7 @@ def collisioncheck(sprite1, sprite2):
             #print lives
             var1 = fpscounter
             global var1
-            pygame.mixer.music.load('./dinosprites/Explosion2.wav')
-            pygame.mixer.music.play(0)
+            collisionSound.play()
         if lives == 2:
             var2 = fpscounter
             if var2-var1 > 30 and hit == False:
@@ -305,13 +327,11 @@ def collisioncheck(sprite1, sprite2):
                 lives += -1
                 var3 = fpscounter
                 global var3
-                pygame.mixer.music.load('./dinosprites/Explosion2.wav')
-                pygame.mixer.music.play(0)
+                collisionSound.play()
         if lives == 1:
             var4 = fpscounter
             if var4-var3 > 30 and hit2 == False:
-                pygame.mixer.music.load('./dinosprites/Explosion2.wav')
-                pygame.mixer.music.play(0)
+                collisionSound.play()
                 lives += -1
                 global collide
                 collide = True
@@ -324,8 +344,8 @@ def collisioncheck(sprite1, sprite2):
                 player.stop()   
                 pygame.display.flip()
                 refresh()
-                message_display('Game Over', 115, 960, 300)
-                message_display('Your Score: ' + str(score), 60, 960, 420)
+                message_display('Game Over', 100, 960, 300, True)
+                message_display('Your Score: ' + str(score), 100, 960, 420, True)
                 time.sleep(5)
 
 def reuseenemy():
@@ -487,8 +507,6 @@ while mainloop == True:
         if(((random.randint(2,10)) % 2) == 0):
             print  ' random flying enemy REUSED '
             reuseflyingenemy()
-
-    #clock.tick(fps)
 
     '''
     #stay in the loop
