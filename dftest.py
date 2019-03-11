@@ -9,15 +9,9 @@ import pygame
 
 cap = cv2.VideoCapture(0)
 starttime = time.time()
-#global heights
 heights = []
-#getimage = True
-#global framejump
 framejump = False
-#global avgavilable
 avgavailable = False
-#global contourbool
-#contourbool = False
 avgheight = 0
 
 
@@ -25,12 +19,7 @@ def grabframe():
     global heights
     global framejump
     global avgavailable
-    #global contourbool
     global avgheight
-    #global y
-    #avgheight = 0
-    #getimage = True
-    #while getimage == True:
     _, img = cap.read()
     hsv = cv2.cvtColor(img, cv2.COLOR_BGR2HSV)
     yellow_lower = np.array([22, 60, 200], np.uint8)
@@ -43,21 +32,16 @@ def grabframe():
     # Tracking the yellow Color
     (_, contours, hierarchy) = cv2.findContours(yellow, cv2.RETR_TREE, cv2.CHAIN_APPROX_SIMPLE)
     for pic, contour in enumerate(contours):
-        #print 'here'
         area = cv2.contourArea(contour)
         y = 0
         contourbool = False
         if (area > 7500):
-            print 'now im here'
-            #global contourbool
             contourbool = True
             x, y, w, h = cv2.boundingRect(contour)
             img = cv2.rectangle(img, (x, y), (x + w, y + h), (0, 255, 0), 2)
             cv2.putText(img, "yellow  color", (x, y), cv2.FONT_HERSHEY_SIMPLEX, 1.0, (0, 255, 0))
             heights.append(y)
-            #print y
-            #print len(heights)
-        if len(heights) >= 100 and avgavailable is False:
+        if len(heights) >= 35 and avgavailable is False:
             print 'I NOW HAVE ENOUGH POINTS: GO!'
             a = 0
             totalheight = 0
@@ -68,23 +52,18 @@ def grabframe():
                 avgheight = totalheight / a
             #global avgavailable
             avgavailable = True
-            #global heights
-            #heights = []
-        #print avgavailable
-        #print contourbool
-        #print avgheight
         if avgavailable == True and contourbool == True and y > avgheight + 75:
             print 'duck'
             print 'y ' + str(y)
             print 'average height ' + str(avgheight)
         if avgavailable == True and contourbool == True and y < avgheight - 75:
             print 'jump'
-            print 'y ' + str(y)
-            print 'average height ' + str(avgheight)
+            #print 'y ' + str(y)
+            #print 'average height ' + str(avgheight)
             #global framejump
             framejump = True
             break
-    cv2.imshow("Color Tracking", img)
+    #cv2.imshow("Color Tracking", img)
 
 BGCOLOR = (220, 220, 220)
 
@@ -149,11 +128,6 @@ class Object(pygame.sprite.Sprite):
         self.rect.y = self.rect.y + self.movey
 
     def duck(self):
-        # self.rect = self.image.get_rect(y=660, x=125)
-        # duckimg = pygame.image.load(os.path.join('./dinosprites/dinoduck.png')).convert_alpha()
-        # self.images.append(duckimg)
-        # self.image = self.images[3]
-        # self.image.set_colorkey(BGCOLOR)
         global duck
         # duck = True
         global animboolduck
@@ -165,7 +139,6 @@ class Object(pygame.sprite.Sprite):
             self.image = self.images[4]
             animboolduck = True
             return
-        # self.rect = self.image.get_rect()
 
     def unduck(self):
         # self.rect = self.image.get_rect(y=625, x=125)
@@ -296,21 +269,6 @@ collide = False
 
 starttime = time.time()
 
-'''
-def drawCloud(): 
-    for i in range(4):  
-        xsize = random.randint(40, 70)      
-        ysize = random.randint(40, 70)
-        size=random.randint(20,70)
-        xOffset=random.randint(-40,40)
-        yOffset=random.randint(-20,20)
-        #pygame.draw.ellipse(world, BLACK, (100+xOffset, 100+yOffset, size, size), 0) # screen, color, (position, size), width
-        pygame.draw.ellipse(world, BLACK, (1700, 250, 150, 60), 0)
-        pygame.draw.ellipse(world, BLACK, (1675, 270, 165, 60), 0)
-        #pygame.draw.ellipse(world, BGCOLOR, (1705, 255, 140, 70), 0)
-'''
-
-
 def message_display(text, size, xcenter, ycenter, updateDisplay):
     if (size == 50):
         TextSurf, TextRect = text_objects(text, gameFont050)
@@ -405,7 +363,8 @@ def refresh():
     if flyingenemyspawned is False and endtime - starttime > 150:
         print 'random flying enemy spawned'
         flyingenemyspawned = True
-    grabframe()
+    if fpscounter % 2 == 0:
+        grabframe()
     pygame.display.flip()
     clock.tick(fps)
 
@@ -516,7 +475,7 @@ while mainloop == True:
         Event1 = pygame.event.Event(pygame.USEREVENT, key = 'hello')
         pygame.event.post(Event1)
     for event in pygame.event.get():
-        print (starteventtime - endeventtime)
+        #print (starteventtime - endeventtime)
         starteventtime = time.time()
         if starteventtime - endeventtime < 0.017:  # this seems to work exactly how i want it to, you no longer can spam the keyboard and have it infinitely jump. Small enough delay that middle schoolers shouldn't notice.
             starteventtime = 100
@@ -583,6 +542,9 @@ while mainloop == True:
                         # clock.tick(fps)
                         a += 1
                     jump = False
+                    global framejump
+                    framejump = False
+                    print framejump
 
             if event.type == pygame.KEYUP:
                 if event.key == pygame.K_DOWN:
