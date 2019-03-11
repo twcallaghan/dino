@@ -7,64 +7,6 @@ import random
 import pygame
 #from operator import itemgetter
 
-cap = cv2.VideoCapture(0)
-starttime = time.time()
-heights = []
-framejump = False
-avgavailable = False
-avgheight = 0
-
-
-def grabframe():
-    global heights
-    global framejump
-    global avgavailable
-    global avgheight
-    _, img = cap.read()
-    hsv = cv2.cvtColor(img, cv2.COLOR_BGR2HSV)
-    yellow_lower = np.array([22, 60, 200], np.uint8)
-    yellow_upper = np.array([60, 255, 255], np.uint8)
-    yellow = cv2.inRange(hsv, yellow_lower, yellow_upper)
-    kernal = np.ones((5, 5), "uint8")
-    yellow = cv2.dilate(yellow, kernal)
-    res2 = cv2.bitwise_and(img, img, mask=yellow)
-
-    # Tracking the yellow Color
-    (_, contours, hierarchy) = cv2.findContours(yellow, cv2.RETR_TREE, cv2.CHAIN_APPROX_SIMPLE)
-    for pic, contour in enumerate(contours):
-        area = cv2.contourArea(contour)
-        y = 0
-        contourbool = False
-        if (area > 7500):
-            contourbool = True
-            x, y, w, h = cv2.boundingRect(contour)
-            img = cv2.rectangle(img, (x, y), (x + w, y + h), (0, 255, 0), 2)
-            cv2.putText(img, "yellow  color", (x, y), cv2.FONT_HERSHEY_SIMPLEX, 1.0, (0, 255, 0))
-            heights.append(y)
-        if len(heights) >= 35 and avgavailable is False:
-            print 'I NOW HAVE ENOUGH POINTS: GO!'
-            a = 0
-            totalheight = 0
-            avgheight = 0
-            for height in heights:
-                totalheight += heights[a]
-                a += 1
-                avgheight = totalheight / a
-            #global avgavailable
-            avgavailable = True
-        if avgavailable == True and contourbool == True and y > avgheight + 75:
-            print 'duck'
-            print 'y ' + str(y)
-            print 'average height ' + str(avgheight)
-        if avgavailable == True and contourbool == True and y < avgheight - 75:
-            print 'jump'
-            #print 'y ' + str(y)
-            #print 'average height ' + str(avgheight)
-            #global framejump
-            framejump = True
-            break
-    #cv2.imshow("Color Tracking", img)
-
 BGCOLOR = (220, 220, 220)
 
 jump = False
@@ -199,7 +141,6 @@ class Object(pygame.sprite.Sprite):
         self.image = self.images[cactusint]
         return
 
-
 # ALPHA = (0, 255, 0)
 BLACK = (0, 0, 0)
 WHITE = (255, 255, 255)
@@ -269,6 +210,111 @@ collide = False
 
 starttime = time.time()
 
+score = 0
+
+cap = cv2.VideoCapture(0)
+heights = []
+framejump = False
+avgavailable = False
+avgheight = 0
+
+
+def grabframe():
+    global heights
+    global framejump
+    global avgavailable
+    global avgheight
+    _, img = cap.read()
+    hsv = cv2.cvtColor(img, cv2.COLOR_BGR2HSV)
+    yellow_lower = np.array([22, 60, 200], np.uint8)
+    yellow_upper = np.array([60, 255, 255], np.uint8)
+    yellow = cv2.inRange(hsv, yellow_lower, yellow_upper)
+    kernal = np.ones((5, 5), "uint8")
+    yellow = cv2.dilate(yellow, kernal)
+    res2 = cv2.bitwise_and(img, img, mask=yellow)
+
+    # Tracking the yellow Color
+    (_, contours, hierarchy) = cv2.findContours(yellow, cv2.RETR_TREE, cv2.CHAIN_APPROX_SIMPLE)
+    for pic, contour in enumerate(contours):
+        area = cv2.contourArea(contour)
+        y = 0
+        contourbool = False
+        if (area > 7500):
+            contourbool = True
+            x, y, w, h = cv2.boundingRect(contour)
+            img = cv2.rectangle(img, (x, y), (x + w, y + h), (0, 255, 0), 2)
+            cv2.putText(img, "yellow  color", (x, y), cv2.FONT_HERSHEY_SIMPLEX, 1.0, (0, 255, 0))
+            heights.append(y)
+        if len(heights) >= 35 and avgavailable is False:
+            print 'I NOW HAVE ENOUGH POINTS: GO!'
+            a = 0
+            totalheight = 0
+            avgheight = 0
+            for height in heights:
+                totalheight += heights[a]
+                a += 1
+                avgheight = totalheight / a
+            avgavailable = True
+        if avgavailable == True and contourbool == True and y > avgheight + 75:
+            print 'duck'
+            print 'y ' + str(y)
+            print 'average height ' + str(avgheight)
+        if avgavailable == True and contourbool == True and y < avgheight - 75:
+            print 'jump'
+            #print 'y ' + str(y)
+            #print 'average height ' + str(avgheight)
+            #global framejump
+            framejump = True
+            break
+    #cv2.imshow("Color Tracking", img)
+
+
+def restartgame():
+    global score
+    global enemyspeed
+    global flyingenemyspeed
+    global cactusspeed
+    global mainloop
+    global collide
+    global fpscounter
+    global lives
+    global starttime
+    global heights
+    global framejump
+    global avgavailable
+    global avgheight
+    global fpsCount
+    global jump
+    player.rect.x = 175
+    player.rect.y = 630
+    enemy.rect.x = 1900
+    enemy.rect.y = 630 + random.randint(-275, -150)
+    flyingenemy.rect.x = 1900
+    flyingenemy.rect.y = 630 + random.randint(-275, -150)
+    cactusenemy.rect.x = 1900
+    cactusenemy.rect.y = 630
+    enemyspeed = random.randint(-7, -5)
+    flyingenemyspeed = random.randint(-7, -5)
+    cactusspeed = random.randint(-13, -10)
+    mainloop = True
+    collide = False
+    lives = 3
+    score = 0
+    fpscounter = 0
+    world.fill((220, 220, 220))
+    player_list.draw(world)
+    enemy_list.draw(world)
+    pygame.draw.line(world, (105, 105, 105), [150, 700], [1770, 700], 3)
+    pygame.draw.rect(world, BGCOLOR, (0, 0, 150, 1080), 0)
+    pygame.draw.rect(world, BGCOLOR, (1770, 0, 150, 1080), 0)
+    heights = []
+    framejump = False
+    avgavailable = False
+    avgheight = 0
+    fpsCount = 0
+    jump = False
+    starttime = time.time()
+
 def message_display(text, size, xcenter, ycenter, updateDisplay):
     if (size == 50):
         TextSurf, TextRect = text_objects(text, gameFont050)
@@ -299,8 +345,8 @@ b = 0
 global c
 c = 0
 
-
 def cloud():
+    global starttime
     global b
     global c
     global cloud1ypos
@@ -316,15 +362,16 @@ def cloud():
         c += 3
     if cloud1xpos < -125:
         b = 0
-        cloudypos = 250 + random.randint(-50, 50)
+        cloud1ypos = 250 + random.randint(0, 50)
     if cloud2xpos < -125:
         c = 500
-        cloudypos = 250 + random.randint(-50, 50)
+        cloud2ypos = 250 + random.randint(-50, 0)
 
 
 def refresh():
     global fpscounter
     global fpsCount
+    global starttime
     fpscounter += 1
     fpsCount += 1
     world.fill((220, 220, 220))
@@ -347,7 +394,7 @@ def refresh():
         flyingenemy.animatebird2()
     endtime = time.time()
     # display fps
-    if (endtime > starttime):
+    if (endtime > starttime) and starttime > 1:
         avgFps = int(fpsCount / (endtime - starttime))
         message_display('avgFps ' + str(avgFps), 50, 1700, 150, False)
     if collide is False:
@@ -424,11 +471,12 @@ def collisioncheck(sprite1, sprite2):
                 #    if score > int(line[0]):
                 #        playerrank -= 1
                 # message_display('Your Rank: ' + str(playerrank) + " out of " + str(numScores))
-
                 time.sleep(5)
+                restartgame()
 
 
 def reuseenemy():
+    global starttime
     enemy.rect.x = 1900
     enemy.rect.y = 625 + random.randint(-275, -150)
     endtime = time.time()
@@ -442,6 +490,7 @@ def reuseenemy():
 
 
 def reuseflyingenemy():
+    global starttime
     flyingenemy.rect.x = 1900
     flyingenemy.rect.y = 625 + random.randint(-275, -150)
     endtime = time.time()
@@ -455,6 +504,7 @@ def reuseflyingenemy():
 
 
 def reusecactus():
+    global starttime
     cactusenemy.randomcactus()
     cactusenemy.rect.x = 2000
     cactusenemy.rect.y = 625
@@ -471,6 +521,7 @@ def reusecactus():
 starteventtime = 0
 endeventtime = 0
 while mainloop == True:
+    global starttime
     if(framejump == True):
         Event1 = pygame.event.Event(pygame.USEREVENT, key = 'hello')
         pygame.event.post(Event1)
@@ -505,9 +556,11 @@ while mainloop == True:
                     player.unduck()
                     global jumpcounter
                     jumpcounter += 1
+                    global jump
+                    jump = True
                     a = 23
                     # while a < 23 and collide == False:
-                    while a > 0 and collide == False:
+                    while a > 0 and collide == False and jump == True:
                         player.jump(-a)
                         enemy.control(enemyspeed, 0)
                         if flyingenemyspawned == True:
@@ -525,7 +578,7 @@ while mainloop == True:
                         a += -1
 
                     a = 1
-                    while a <= 23 and collide == False:
+                    while a <= 23 and collide == False and jump == True:
                         player.jump(a)
                         enemy.control(enemyspeed, 0)
                         if (flyingenemyspawned == True):
