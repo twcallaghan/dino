@@ -152,9 +152,11 @@ main = True
 jumpcounter = 0
 
 myfont = pygame.font.SysFont('Comic Sans MS', 64)
-gameFont050 = pygame.font.Font('freesansbold.ttf', 050)
+gameFont048 = pygame.font.Font('freesansbold.ttf', 48)
+gameFont050 = pygame.font.Font('freesansbold.ttf', 50)
+gameFont075 = pygame.font.Font('freesansbold.ttf', 75)
 gameFont100 = pygame.font.Font('freesansbold.ttf', 100)
-gameFont150 = pygame.font.Font('freesansbold.ttf', 150)
+gameFont135 = pygame.font.Font('freesansbold.ttf', 135)
 gameFont200 = pygame.font.Font('freesansbold.ttf', 200)
 
 #world = pygame.display.set_mode([worldx, worldy], pygame.FULLSCREEN, screenBitDepth)
@@ -318,10 +320,14 @@ def restartgame():
 def message_display(text, size, xcenter, ycenter, updateDisplay):
     if (size == 50):
         TextSurf, TextRect = text_objects(text, gameFont050)
+    if (size == 75):
+        TextSurf, TextRect = text_objects(text, gameFont075)
     elif (size == 100):
         TextSurf, TextRect = text_objects(text, gameFont100)
-    elif (size == 150):
-        TextSurf, TextRect = text_objects(text, gameFont150)
+    elif (size == 48):
+        TextSurf, TextRect = text_objects(text, gameFont048)
+    elif (size == 135):
+        TextSurf, TextRect = text_objects(text, gameFont135)
     else:
         TextSurf, TextRect = text_objects(text, gameFont200)
     TextRect.center = (xcenter, ycenter)
@@ -396,16 +402,16 @@ def refresh():
     # display fps
     if (endtime > starttime) and starttime > 1:
         avgFps = int(fpsCount / (endtime - starttime))
-        message_display('avgFps ' + str(avgFps), 50, 1700, 150, False)
+        message_display('avgFps ' + str(avgFps), 48, 1700, 150, False)
     if collide is False:
         global score
         score = int((float("{0:.2f}".format(endtime - starttime)) * 10) * 1 + float(
             "{0:.2f}".format((endtime - starttime) / 10)))
         # print 'score ' + str(score)
-        message_display('Score ' + str(score), 50, 1700, 50, False)
+        message_display('Score ' + str(score), 48, 1700, 50, False)
         if score > 10 and (score % 98) == 0:
             progressSound.play()
-    message_display('Lives: ' + str(lives), 50, 1690, 100, False)
+    message_display('Lives: ' + str(lives), 48, 1690, 100, False)
     global flyingenemyspawned
     if flyingenemyspawned is False and endtime - starttime > 150:
         print 'random flying enemy spawned'
@@ -452,26 +458,23 @@ def collisioncheck(sprite1, sprite2):
                 player.stop()
                 pygame.display.flip()
                 refresh()
-                message_display('Game Over', 100, 960, 300, True)
-                message_display('Your Score: ' + str(score), 100, 960, 420, True)
-                #leaderboardfile = open("./leaderboard.txt", 'a')
-                #leaderboardfile.write(str(score) + ',' + str(jumpcounter) + '\n')
-                #leaderboardfile.close()
-                #leaderboardfile = open("./leaderboard.txt", 'r')
-                #lines = leaderboardfile.read().split('\n')
-                #lines.sort(key=itemgetter(0))
-                #del lines[0]
-                #print lines
-                #numScores = len(lines) + 1
-                #playerrank = numScores
-                #for line in lines:  # trying to make a leaderboard
-                    # filespaceread = line.split(' ')
-                #    print line
-                    # print filespaceread
-                #    if score > int(line[0]):
-                #        playerrank -= 1
-                # message_display('Your Rank: ' + str(playerrank) + " out of " + str(numScores))
-                time.sleep(5)
+                message_display('Game Over', 100, 960, 100, True)
+                message_display('Final Score: ' + str(score), 75, 960, 200, True)
+                leaderboardfile = open("./leaderboard.txt", 'r')
+                lines = leaderboardfile.read().split('\n')
+                leaderboardfile.close()
+                lines.sort()
+                del lines[0]
+                numScores = len(lines) + 1
+                playerRank = numScores
+                for line in lines:
+                    if score > int(line):
+                        playerRank -= 1
+                leaderboardfile = open("./leaderboard.txt", 'a')
+                leaderboardfile.write(str(score) + '\n')  # + str(jumpcounter) + '\n')
+                message_display(('Overall Rank: ' + str(playerRank) + " out of " + str(numScores)), 75, 960, 300, True)
+                message_display(('Number of Jumps: ' + str(jumpcounter)), 75, 960, 400, True)
+                time.sleep(10)
                 restartgame()
 
 
