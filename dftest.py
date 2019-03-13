@@ -159,8 +159,8 @@ gameFont100 = pygame.font.Font('freesansbold.ttf', 100)
 gameFont135 = pygame.font.Font('freesansbold.ttf', 135)
 gameFont200 = pygame.font.Font('freesansbold.ttf', 200)
 
-#world = pygame.display.set_mode([worldx, worldy], pygame.FULLSCREEN, screenBitDepth)
-world = pygame.display.set_mode([worldx, worldy])
+world = pygame.display.set_mode([worldx, worldy], pygame.FULLSCREEN, screenBitDepth)
+#world = pygame.display.set_mode([worldx, worldy])
 
 pygame.mouse.set_visible(False)
 
@@ -220,6 +220,30 @@ framejump = False
 avgavailable = False
 avgheight = 0
 
+def message_display(text, size, xcenter, ycenter, updateDisplay, color):
+    if (size == 50):
+        TextSurf, TextRect = text_objects(text, gameFont050, color)
+    if (size == 75):
+        TextSurf, TextRect = text_objects(text, gameFont075, color)
+    elif (size == 100):
+        TextSurf, TextRect = text_objects(text, gameFont100, color)
+    elif (size == 48):
+        TextSurf, TextRect = text_objects(text, gameFont048, color)
+    elif (size == 135):
+        TextSurf, TextRect = text_objects(text, gameFont135, color)
+    else:
+        TextSurf, TextRect = text_objects(text, gameFont200, color)
+    TextRect.center = (xcenter, ycenter)
+    world.blit(TextSurf, TextRect)
+    if (updateDisplay):
+        # need to update the live display - game over overlay
+        pygame.display.update(TextRect)
+
+
+def text_objects(text, font, color):
+    textSurface = font.render(text, True, color)
+    return textSurface, textSurface.get_rect()
+
 
 def grabframe():
     global heights
@@ -248,7 +272,6 @@ def grabframe():
             cv2.putText(img, "yellow  color", (x, y), cv2.FONT_HERSHEY_SIMPLEX, 1.0, (0, 255, 0))
             heights.append(y)
         if len(heights) >= 35 and avgavailable is False:
-            print 'I NOW HAVE ENOUGH POINTS: GO!'
             a = 0
             totalheight = 0
             avgheight = 0
@@ -257,11 +280,13 @@ def grabframe():
                 a += 1
                 avgheight = totalheight / a
             avgavailable = True
+        '''
         if avgavailable == True and contourbool == True and y > avgheight + 75:
             print 'duck'
             print 'y ' + str(y)
             print 'average height ' + str(avgheight)
-        if avgavailable == True and contourbool == True and y < avgheight - 75:
+        '''
+        if avgavailable == True and contourbool == True and y < avgheight - 50:
             print 'jump'
             #print 'y ' + str(y)
             #print 'average height ' + str(avgheight)
@@ -269,7 +294,7 @@ def grabframe():
             framejump = True
             break
     #cv2.imshow("Color Tracking", img)
-
+    #cv2.imshow("Trying to find yellow", res2)
 
 def restartgame():
     global score
@@ -287,6 +312,14 @@ def restartgame():
     global avgheight
     global fpsCount
     global jump
+    global jumpcounter
+    jumpcounter = 0
+    heights = []
+    framejump = False
+    avgavailable = False
+    avgheight = 0
+    fpsCount = 0
+    jump = False
     player.rect.x = 175
     player.rect.y = 630
     enemy.rect.x = 1900
@@ -309,38 +342,73 @@ def restartgame():
     pygame.draw.line(world, (105, 105, 105), [150, 700], [1770, 700], 3)
     pygame.draw.rect(world, BGCOLOR, (0, 0, 150, 1080), 0)
     pygame.draw.rect(world, BGCOLOR, (1770, 0, 150, 1080), 0)
+    starttime = time.time()
+
+gamestart = False
+def goodtogo():
+    global heights
+    global framejump
+    global avgavailable
+    global avgheight
+    global fpsCount
+    global jump
+    global collide
     heights = []
     framejump = False
     avgavailable = False
     avgheight = 0
     fpsCount = 0
     jump = False
-    starttime = time.time()
+    collide = False
+    world.fill((220, 220, 220))
+    pygame.display.flip()
 
-def message_display(text, size, xcenter, ycenter, updateDisplay):
-    if (size == 50):
-        TextSurf, TextRect = text_objects(text, gameFont050)
-    if (size == 75):
-        TextSurf, TextRect = text_objects(text, gameFont075)
-    elif (size == 100):
-        TextSurf, TextRect = text_objects(text, gameFont100)
-    elif (size == 48):
-        TextSurf, TextRect = text_objects(text, gameFont048)
-    elif (size == 135):
-        TextSurf, TextRect = text_objects(text, gameFont135)
-    else:
-        TextSurf, TextRect = text_objects(text, gameFont200)
-    TextRect.center = (xcenter, ycenter)
-    world.blit(TextSurf, TextRect)
-    if (updateDisplay):
-        # need to update the live display - game over overlay
-        pygame.display.update(TextRect)
+    global gamestart
+    global jumptwice
+    jumptwice = False
+    startupfps = 0
+    startjumps = 0
+    time.sleep(2)
+    while jumptwice is False:
+        startupfps += 1
+        world.fill((220, 220, 220))
 
+        if startupfps % 2 == 0:
+            grabframe()
 
-def text_objects(text, font):
-    textSurface = font.render(text, True, BLACK)
-    return textSurface, textSurface.get_rect()
+        message_display('Please stand still while reading the instructions.', 75, 960, 150, True, BLACK)
+        message_display('The only control is jumping. The dinosaur will jump when you jump.        ', 48, 960, 300,
+                        True, BLACK)
+        message_display('You have 3 lives. You lose a life when the dinosaur hits a bird or cactus. ', 48, 960, 375,
+                        True, BLACK)
+        message_display('The goal of the game is to survive as long as you can.                                ',
+                        48, 960, 450, True, BLACK)
+        message_display(
+            'The game ends when you lose all 3 lives.                                                       ', 48,
+            960, 525, True, BLACK)
+        message_display('Jump twice when you are ready for your height to be finalized.                  ', 48, 960,
+                        600, True, (65, 105, 225))
+        #print 'jump'
+        if framejump == True and avgavailable == True and startjumps == 0:
+            startjumps = 1
+            framejump = False
+            starttime = time.time()
 
+        endtime = time.time()
+        if startjumps == 1 and framejump is True and endtime-starttime > 1:
+            jumptwice = True
+            gamestart = True
+            framejump = False
+            restartgame()
+            #time.sleep(1)
+        print framejump
+        print avgavailable
+        print startjumps
+        pygame.event.pump()
+        pygame.display.update()
+        pygame.display.flip()
+        clock.tick(fps)
+        framejump = False
 
 global cloud1ypos
 global cloud2ypos
@@ -402,16 +470,16 @@ def refresh():
     # display fps
     if (endtime > starttime) and starttime > 1:
         avgFps = int(fpsCount / (endtime - starttime))
-        message_display('avgFps ' + str(avgFps), 48, 1700, 150, False)
+        message_display('avgFps ' + str(avgFps), 48, 1700, 150, False, BLACK)
     if collide is False:
         global score
         score = int((float("{0:.2f}".format(endtime - starttime)) * 10) * 1 + float(
             "{0:.2f}".format((endtime - starttime) / 10)))
         # print 'score ' + str(score)
-        message_display('Score ' + str(score), 48, 1700, 50, False)
+        message_display('Score ' + str(score), 48, 1700, 50, False, BLACK)
         if score > 10 and (score % 98) == 0:
             progressSound.play()
-    message_display('Lives: ' + str(lives), 48, 1690, 100, False)
+    message_display('Lives: ' + str(lives), 48, 1690, 100, False, BLACK)
     global flyingenemyspawned
     if flyingenemyspawned is False and endtime - starttime > 150:
         print 'random flying enemy spawned'
@@ -423,6 +491,7 @@ def refresh():
 
 
 def collisioncheck(sprite1, sprite2):
+    global gamestart
     collision = pygame.sprite.collide_rect(sprite1, sprite2)
     if collision == True:
         hit = False
@@ -450,16 +519,16 @@ def collisioncheck(sprite1, sprite2):
                 global collide
                 collide = True
                 print "YOU LOSE!"
-                global mainloop
-                mainloop = False
+                #global mainloop
+                #mainloop = False
                 world.fill((220, 220, 220))
                 enemy.stop()
                 flyingenemy.stop()
                 player.stop()
                 pygame.display.flip()
                 refresh()
-                message_display('Game Over', 100, 960, 100, True)
-                message_display('Final Score: ' + str(score), 75, 960, 200, True)
+                message_display('Game Over', 100, 960, 100, True, BLACK)
+                message_display('Final Score: ' + str(score), 75, 960, 200, True, BLACK)
                 leaderboardfile = open("./leaderboard.txt", 'r')
                 lines = leaderboardfile.read().split('\n')
                 leaderboardfile.close()
@@ -472,11 +541,34 @@ def collisioncheck(sprite1, sprite2):
                         playerRank -= 1
                 leaderboardfile = open("./leaderboard.txt", 'a')
                 leaderboardfile.write(str(score) + '\n')  # + str(jumpcounter) + '\n')
-                message_display(('Overall Rank: ' + str(playerRank) + " out of " + str(numScores)), 75, 960, 300, True)
-                message_display(('Number of Jumps: ' + str(jumpcounter)), 75, 960, 400, True)
-                time.sleep(10)
-                restartgame()
+                message_display(('Overall Rank: ' + str(playerRank) + " out of " + str(numScores)), 75, 960, 300, True, BLACK)
 
+                jumpleaderboard = open("./jumpldb.txt", 'r')
+                jumplines = jumpleaderboard.read().split('\n')
+                jumpleaderboard.close()
+                jumplines.sort()
+                del jumplines[0]
+                numScores2 = len(jumplines) + 1
+                playerRank2 = numScores2
+                for line2 in jumplines:
+                    if score > int(line2):
+                        playerRank2 -= 1
+                jumpleaderboard = open("./jumpldb.txt", 'a')
+                jumpleaderboard.write(str(score) + '\n')  # + str(jumpcounter) + '\n')
+                message_display(('Number of Jumps: ' + str(jumpcounter)), 75, 960, 400, True, BLACK)
+                message_display(('Overall Jumping Rank: ' + str(playerRank2) + " out of " + str(numScores2)), 75, 960, 500, True, BLACK)
+                time.sleep(10)
+                pygame.event.pump()
+                world.fill(BGCOLOR)
+                pygame.display.update()
+                message_display('If you want to play again just wait a few seconds and follow the instructions.', 48, 960, 150, True, BLACK)
+                message_display('If not, please take off the vest and let the next person in line have a turn.  ', 48, 960, 250, True, BLACK)
+                pygame.display.flip()
+                time.sleep(10)
+                pygame.event.pump()
+                pygame.display.update()
+                gamestart = False
+                #goodtogo()
 
 def reuseenemy():
     global starttime
@@ -520,11 +612,12 @@ def reusecactus():
         cactusspeed = attemptedspeed
     print str(cactusspeed) + ' cactus speed speed on respawn'
 
-
 starteventtime = 0
 endeventtime = 0
 while mainloop == True:
     global starttime
+    while gamestart is False:
+        goodtogo()
     if(framejump == True):
         Event1 = pygame.event.Event(pygame.USEREVENT, key = 'hello')
         pygame.event.post(Event1)
