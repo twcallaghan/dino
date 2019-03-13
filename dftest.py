@@ -202,7 +202,7 @@ global flyingenemyspeed
 flyingenemyspeed = random.randint(-7, -5)
 
 global cactusspeed
-cactusspeed = random.randint(-13, -10)
+cactusspeed = random.randint(-14, -12)
 
 global mainloop
 mainloop = True
@@ -279,14 +279,20 @@ def grabframe():
                 totalheight += heights[a]
                 a += 1
                 avgheight = totalheight / a
-            avgavailable = True
+            if avgheight <= 40:
+                avgavailable = False
+                heights = []
+                message_display('Please back up', 75, 960, 800, True, (0, 255, 0))
+                time.sleep(2)
+            else:
+                avgavailable = True
         '''
         if avgavailable == True and contourbool == True and y > avgheight + 75:
             print 'duck'
             print 'y ' + str(y)
             print 'average height ' + str(avgheight)
         '''
-        if avgavailable == True and contourbool == True and y < avgheight - 50:
+        if avgavailable == True and contourbool == True and y < avgheight - 40:
             print 'jump'
             #print 'y ' + str(y)
             #print 'average height ' + str(avgheight)
@@ -393,6 +399,9 @@ def goodtogo():
             startjumps = 1
             framejump = False
             starttime = time.time()
+
+        if startjumps == 1:
+            message_display('First jump detected', 75, 960, 700, True, (255,99,71))
 
         endtime = time.time()
         if startjumps == 1 and framejump is True and endtime-starttime > 1:
@@ -605,9 +614,9 @@ def reusecactus():
     cactusenemy.rect.y = 625
     endtime = time.time()
     global cactusspeed
-    attemptedspeed = (random.randint(-8, -1)) - (int(endtime - starttime)) / 4
-    if int(attemptedspeed) > -5:
-        cactusspeed = random.randint(-8, -6)
+    attemptedspeed = (random.randint(-8, -6)) - (int(endtime - starttime)) / 4
+    if int(attemptedspeed) > -10:
+        cactusspeed = random.randint(-13, -10)
     else:
         cactusspeed = attemptedspeed
     print str(cactusspeed) + ' cactus speed speed on respawn'
