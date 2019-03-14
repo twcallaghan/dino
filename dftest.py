@@ -597,7 +597,7 @@ def collisioncheck(sprite1, sprite2):
                     if score > int(line2):
                         playerRank2 -= 1
                 jumpleaderboard = open("./jumpldb.txt", 'a')
-                jumpleaderboard.write(str(score) + '\n')  # + str(jumpcounter) + '\n')
+                jumpleaderboard.write(str(jumpcounter) + '\n')  # + str(jumpcounter) + '\n')
                 message_display(('Number of Jumps: ' + str(jumpcounter)), 75, 960, 400, True, BLACK)
                 message_display(('Overall Jumping Rank: ' + str(playerRank2) + " out of " + str(numScores2)), 75, 960, 500, True, BLACK)
                 time.sleep(10)
