@@ -20,6 +20,14 @@ pygame.mixer.pre_init(22050, -16, 1, 256)
 pygame.mixer.init()
 pygame.init()
 
+img_rgb=None
+img_yellow=None
+img_boxes=None
+
+rgb_on=False
+yellow_on=False
+boxes_on=False
+
 fpscounter = 0
 
 fps = 60  # this essentially decides how fast everything will be updating on the screen, need to test on a 60Hz screen as my screen with 144fps is a lot faster than it is with 60
@@ -250,8 +258,14 @@ def grabframe():
     global framejump
     global avgavailable
     global avgheight
+    global img_rgb
+    global img_yellow
+    global img_boxes
     _, img = cap.read()
     hsv = cv2.cvtColor(img, cv2.COLOR_BGR2HSV)
+    cam_rgb=cv2.cvtColor(img,cv2.COLOR_BGR2RGB)
+    cam_rgb=np.rot90(cam_rgb)
+    img_rgb=pygame.surfarray.make_surface(cam_rgb)
     yellow_lower = np.array([22, 60, 200], np.uint8)
     yellow_upper = np.array([60, 255, 255], np.uint8)
     yellow = cv2.inRange(hsv, yellow_lower, yellow_upper)
@@ -301,6 +315,14 @@ def grabframe():
             break
     #cv2.imshow("Color Tracking", img)
     #cv2.imshow("Trying to find yellow", res2)
+    #cam3=cv2.cvtColor(frame,cv2.COLOR_BGR2RGB)
+    cam_yellow=np.rot90(res2)
+    img_yellow=pygame.surfarray.make_surface(cam_yellow)
+    cam_boxes=np.rot90(img)
+    img_boxes=pygame.surfarray.make_surface(cam_boxes)
+    #surf1=pygame.transform.scale(surf1,(400,270))
+    #world.blit(surf1,(200,600))
+
 
 def restartgame():
     global score
@@ -495,6 +517,18 @@ def refresh():
         flyingenemyspawned = True
     if fpscounter % 2 == 0:
         grabframe()
+
+    # display camera windows
+    if ((img_rgb is not None) and rgb_on):
+        disp_rgb=pygame.transform.scale(img_rgb,(400,270))
+        world.blit(disp_rgb,(200,750))
+    if ((img_boxes is not None) and yellow_on):
+        disp_boxes=pygame.transform.scale(img_boxes,(400,270))
+        world.blit(disp_boxes,(800,750))
+    if ((img_yellow is not None) and boxes_on):
+        disp_yellow=pygame.transform.scale(img_yellow,(400,270))
+        world.blit(disp_yellow,(1400,750))
+
     pygame.display.flip()
     clock.tick(fps)
 
@@ -638,6 +672,13 @@ while mainloop == True:
             endeventtime = 0
         else:
             if event.type == pygame.KEYDOWN or framejump == True:  # if a key is pressed
+                if event.key == pygame.K_7:
+                    rgb_on = not rgb_on
+                if event.key == pygame.K_8:
+                    yellow_on = not yellow_on
+                if event.key == pygame.K_9:
+                    boxes_on = not boxes_on
+
                 print('key pressed')
                 if event.key == pygame.K_DOWN:
                     print('down')
